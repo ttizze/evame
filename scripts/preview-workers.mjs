@@ -55,10 +55,13 @@ await writeFile(`${directory}/app-secrets.json`, JSON.stringify(secrets), {
 	mode: 0o600,
 });
 
-await prepareReaderStorage("dist/server/wrangler.json", true);
-const configPath = await prepareReaderConnected("dist/server");
-if (process.env.EVAME_WORKERS_PUBLICATION)
-	await confirmDeployment(JSON.parse(process.env.EVAME_WORKERS_PUBLICATION));
+const deployment = JSON.parse(process.env.EVAME_WORKERS_PUBLICATION ?? "null");
+await prepareReaderStorage("dist/server/wrangler.json", true, deployment);
+const configPath = await prepareReaderConnected(
+	"dist/server",
+	deployment?.signalSha ?? null,
+);
+if (deployment) await confirmDeployment(deployment);
 
 execFileSync(
 	"bun",

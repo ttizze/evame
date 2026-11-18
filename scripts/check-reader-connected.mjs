@@ -6,6 +6,11 @@ import { createClient } from "@libsql/client";
 import { toJSONAsync } from "seroval";
 import { createTestHarness } from "wrangler";
 import { prepareReaderConnected } from "./prepare-reader-connected.mjs";
+import {
+	assertPreviewSignal,
+	previewSignalHeader,
+	readPreviewSignal,
+} from "./preview-deployment.mjs";
 import { readServerFunctions } from "./server-functions.mjs";
 import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
@@ -14,6 +19,7 @@ const id = randomUUID();
 const directory = resolve(`.data/reader-connected-${id}`);
 await mkdir(directory, { recursive: true, mode: 0o700 });
 const remote = process.env.CONNECTED_PREVIEW_ORIGIN;
+const signal = remote ? process.env.CONNECTED_PREVIEW_SIGNAL : null;
 const previewSecrets = remote
 	? JSON.parse(process.env.EVAME_PREVIEW_SECRETS ?? "null")
 	: null;
@@ -31,6 +37,7 @@ if (remote) {
 		/^libsql:\/\/evame-preview-[a-z0-9.-]+\.turso\.io$/,
 		"専用Preview DBだけを使用する",
 	);
+	if (signal) assert.match(signal, /^[a-f0-9]{40}$/);
 }
 const authSecret = remote
 	? (previewSecrets?.BETTER_AUTH_SECRET ?? process.env.BETTER_AUTH_SECRET)
@@ -49,6 +56,8 @@ let worker;
 let browserOrigin = remote;
 let failure;
 try {
+	if (signal)
+		assertPreviewSignal(signal, await readPreviewSignal(remote, signal));
 	if (remote)
 		database = createClient({
 			url: databaseUrl,
@@ -100,10 +109,15 @@ try {
 		const started = performance.now();
 		let response;
 		if (remote) {
+			const headers = new Headers(init.headers);
+			if (signal) headers.set(previewSignalHeader, signal);
 			response = await fetch(new URL(path, origin), {
 				...init,
+				headers,
 				signal: AbortSignal.timeout(60000),
 			});
+			if (signal)
+				assertPreviewSignal(signal, response.headers.get(previewSignalHeader));
 		} else {
 			const outgoing = new Request(new URL(path, origin), init);
 			response = await worker.fetch(outgoing.url, {
@@ -377,6 +391,7 @@ try {
 				for (const width of [1280, 390]) {
 					const context = await browser.newContext({
 						viewport: { width, height: 900 },
+						serviceWorkers: "block",
 					});
 					await context.addCookies([
 						{
@@ -388,6 +403,32 @@ try {
 						},
 					]);
 					const page = await context.newPage();
+					let changed = null;
+					if (signal) {
+						const documentsAndApi = ["document", "fetch", "xhr"];
+						await context.route(
+							(url) => url.origin === browserOrigin,
+							async (route) => {
+								const request = route.request();
+								if (!documentsAndApi.includes(request.resourceType()))
+									return route.continue();
+								await route.continue({
+									headers: {
+										...request.headers(),
+										[previewSignalHeader]: signal,
+									},
+								});
+							},
+						);
+						page.on("response", (response) => {
+							if (
+								new URL(response.url()).origin === browserOrigin &&
+								documentsAndApi.includes(response.request().resourceType()) &&
+								response.headers()[previewSignalHeader] !== signal
+							)
+								changed = response.request().resourceType();
+						});
+					}
 					await page.goto(new URL(`${path}/edit`, browserOrigin).href);
 					const editor = page.locator(
 						'[data-testid="lexical-editor"][contenteditable=true]',
@@ -407,6 +448,11 @@ try {
 					await expect(editor).toContainText(text);
 					await page.goto(new URL(path, browserOrigin).href);
 					await expect(page.locator("main")).toContainText(text);
+					assert.equal(
+						changed,
+						null,
+						"Cloudflare Preview deployment changed during browser verification",
+					);
 					await page.screenshot({
 						path: `${directory}/${type.name()}-${width}.png`,
 						fullPage: true,
@@ -495,6 +541,8 @@ try {
 	await action("togglePublishAction_createServerFn_handler");
 	await action("archivePageAction_createServerFn_handler");
 	assert.equal((await request(path)).status, 404);
+	if (signal)
+		assertPreviewSignal(signal, await readPreviewSignal(remote, signal));
 	console.log(
 		"実際の保存・公開・並行保存・非公開化・削除を同じWorkerのAstro表示へ接続しました",
 	);

@@ -11,8 +11,12 @@ lint・型検査・ビルドと計測入力の準備を並列実行し、ユニ�
 `test-snapshot` がbase SHAの実測キャッシュを一度だけ復元し、未作成なら空の入力を確定する。その不変artifactを全シャードと集約ジョブで共有し、並行mainによるキャッシュ追加で入力が変わるのを防ぐ。各シャードは時間の長いファイルから空きの多いシャードへ割り当てる。実測がないファイルは推定値を使い、キャッシュ未作成でも省略しない。各シャードは独立したVitestキャッシュと空DBを使う。`test-results` は依存インストールなしで4件の計測結果・割り当て・元スナップショットの一致を検証し、mainの成功結果だけを次回用に保存する。
 
 ```sh
-nix develop --command bun scripts/ci-tests.mjs --shard 1/4
-nix develop --command bun scripts/ci-tests.mjs merge .data/ci-test-durations-{1,2,3,4}-of-4.json
+nix develop --command bash -e -c '
+  for shard in 1 2 3 4; do
+    bun scripts/ci-tests.mjs --shard "$shard/4"
+  done
+  bun scripts/ci-tests.mjs merge .data/ci-test-durations-{1,2,3,4}-of-4.json
+'
 ```
 
 `CI_TEST_BASE` が未指定なら全件を対象にする。計測入力は `.data/ci-test-durations.json`、出力は `.data/ci-test-durations-<番号>-of-<総数>.json`。それぞれ `CI_TEST_DURATIONS_INPUT`・`CI_TEST_DURATIONS_OUTPUT` で変更できる。
@@ -79,7 +83,7 @@ printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIG
 
 ## PRのプレビュー
 
-同じリポジトリ内のPRは、Nix CIとPreview DBのマイグレーションが成功するとCloudflare Buildsが標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。公開結果はCloudflare BuildsとGitHubのチェックから確認する。
+同じリポジトリ内で、投稿者が人間のアカウントで現在のリポジトリ権限が `write`・`maintain`・`admin` のPRを自動公開する。Nix CI、GitHubの `preview` 環境の保護ルール、Preview DBのマイグレーションを通過するとCloudflare Buildsが標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を更新する。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。公開結果はCloudflare BuildsとGitHubのチェックから確認する。
 
 ログインはメールのリンクを使う。Cloudflare Buildsは `VITE_AUTH_GOOGLE_ENABLED=false` とPreviewの `VITE_PUBLIC_DOMAIN` を指定してビルドする。`BETTER_AUTH_URL` も同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
 
@@ -106,7 +110,7 @@ CloudflareのPreviews Baseのビルドsecret `EVAME_PREVIEW_SECRETS` に専用DB
 
 `.github/workflows/ci.yaml` はBiome・typecheck・ビルド・単体テスト・ブラウザーテストと、SQLite・ローカルR2を使う保存／公開HTMLの接続検証を行う。mainとPRの両方でSentry送信・アップロードを無効化し、Cloudflare・Tursoなどのサービス認証を渡さない。CIの実行名 `CI <SHA>` に検証するコミットを記録し、ビルドしたソースの実SHAと一致することを確認する。
 
-`.github/workflows/publish.yaml` は成功したCIから起動し、同じSHAのDBマイグレーションを直列実行する。同じリポジトリの開いたPRでCIが投稿者のwrite・maintain・admin権限を確認した場合にPreviewを公開する。DB更新の成功後、GitHub Actionsの標準トークンで本番は `cf-publish/main`、Previewは `cf-publish/pr-<PR番号>` に公開用コミットを作る。コミットにはWranglerのWorker名とCI・Publishの実行IDだけを記録する。CIを再実行して成功すると、同じソースSHAで新しい公開用コミットを作る。
+`.github/workflows/publish.yaml` は成功したCIから起動する。本番とPreviewをそれぞれ直列実行し、`queue: max` で待機中の実行を保持する。Previewは `preview` 環境の保護ルールを通過して同じSHAの専用DBマイグレーションを実行する。GitHub Actionsの標準トークンで本番は `cf-publish/main`、Previewは `cf-publish/pr-<PR番号>` に公開用コミットを作る。コミットにはWorker名とCI・Publishの実行IDと試行番号、CIの実行番号を記録する。遅れて処理された古いCI結果は、先端の公開用コミットより古ければ公開しない。
 
 Cloudflareの `evame-start` → Settings → Builds では既存の `ttizze/evame` Git連携を使う。Productionの対象は `cf-publish/main`。ProductionとPreviews BaseのBuild commandを空にし、両方のビルド変数に `SKIP_DEPENDENCY_INSTALL=true`、`BUN_VERSION=1.3.13`、`NODE_VERSION=24.19.0` を設定する。BunとNodeの版は `nix develop` の実行結果と揃える。Deploy commandとPreview commandはどちらも `main` から公開判定を読み込む。Preview commandでは最後の引数を `preview` にする。公開コマンドと公開専用ブランチの種別が一致した場合に公開する。
 
@@ -114,9 +118,9 @@ Cloudflareの `evame-start` → Settings → Builds では既存の `ttizze/evam
 git fetch --no-tags --depth=1 https://github.com/ttizze/evame.git main && git show FETCH_HEAD:scripts/cloudflare-build.mjs > /tmp/evame-cloudflare-build.mjs && node /tmp/evame-cloudflare-build.mjs production
 ```
 
-Workers Buildsは公開用コミットのブランチと実行IDを照合する。GitHub上のCIとDB更新の成功を確認し、本番は `main` の検証済み先端SHA、PreviewはCIが使ったマージSHAを取得してビルドする。PRのhead SHAが同じ場合、CI終了後に `main` が進んでも、そのCIが検証したマージSHAを使用できる。R2アセット保存後に現行SHAと公開用コミットを再確認し、Wranglerから公開する。公開専用以外のブランチでは公開処理を終了する。
+Workers Buildsは公開用コミットに記録した試行のCI成功と公開判定を確認する。本番は `main` の検証済み先端SHA、Previewは専用DB更新も確認してCIが使ったマージSHAを取得する。PRのhead SHAが同じ場合、CI終了後に `main` が進んでも検証済みマージSHAを使用できる。R2書き込みの前後で現在のソースと公開用コミットを照合する。本番は本番用ビルドとR2保存が成功してから同じソースでマイグレーションを実行し、その成果物をWranglerで公開する。GitHub Actionsは該当するWorkers Buildsチェックが完了するまで次の本番公開を待機させる。
 
-`Publish` のPreview検証ジョブは、実Previewが同じマージSHAを配信するまで待つ。認証・Astro表示・保存・非公開化・削除・並行更新・R2障害からの回復を検証し、成果物をGitHubへ記録する。
+`Publish` のPreview検証ジョブは、実Previewが該当する公開シグナルを配信するまで待つ。認証に使う固定URLでHTTPとブラウザーのリクエストごとにシグナルを照合し、別のデプロイに切り替わった場合は検証を失敗させる。認証・Astro表示・保存・非公開化・削除・並行更新・R2障害からの回復を検証し、成果物をGitHubへ記録する。
 
 切り替え時は旧本番ビルドを停止してから `main` に変更を取り込む。`Publish` が `cf-publish/main` を初回作成した後にCloudflareの本番対象を切り替え、ビルドを再開する。Previewでは専用DBへの接続・画像保存と配信コミットの一致を確認する。切り替え後の再試行には `Publish` の再実行か、同じ公開用コミットのCloudflare Buildsからの再試行を使う。
 
@@ -124,7 +128,7 @@ Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`dep
 
 `scripts/prepare-reader-storage.mjs` は本番と標準Previewで共用し、`dist/client/_astro` のアセットを `assets/_astro/` へCloudflare公式R2 REST APIでMIMEとimmutable Cache-Control付きで保存する。`CLOUDFLARE_API_TOKEN` を使い、未指定の場合は `bun x wrangler auth token --json` で既存のCLI認証を取得する。開発用のremote sessionや新規ログインは使用しない。本番とPreviewの専用バケットを維持し、通常デプロイではバケットの保持設定を変更しない。アップロード失敗時はデプロイしない。旧JS/CSSは削除期限を設けず、現行Static Assetsが404のとき同じWorkerのR2 bindingから配信する。CIのアセット履歴cacheは不要。ビルド自体ではネットワーク取得しない。
 
-本番の `TURSO_DATABASE_URL` と `TURSO_AUTH_TOKEN` は既存のGitHub Actions secretからマイグレーションに渡す。Cloudflare Productionのビルド変数には `SENTRY_AUTH_TOKEN` と `GOOGLE_ANALYTICS_ID` を設定する。Workers BuildsのトークンにはWorker編集とR2書き込みの権限が必要。Cloudflareの標準生成トークンには両方が含まれる。GitHub ActionsはCloudflareのデプロイ用トークンを使わない。
+Cloudflare Productionのビルド変数に `SENTRY_AUTH_TOKEN` と `GOOGLE_ANALYTICS_ID` を設定する。旧本番ビルドの停止後、既存の本番 `TURSO_DATABASE_URL` と `TURSO_AUTH_TOKEN` をProductionのビルドsecretに設定し、マイグレーションに渡す。Previews BaseではPreview専用の資格情報を使用し、本番専用の値が見つかった場合はビルドを停止する。Workers Buildsの標準生成トークンはWorkerの編集とR2保存に使う。
 
 本番切り替え前に `PUBLIC_HTML` のbucketを用意する。`changes/`と`pending/`だけを2日で回収し、`html/`・`dependencies/`・`assets/`に削除期限を設けない。バケット作成後に `scripts/configure-reader-storage.mjs` をR2管理権限で一度実行し、既存の削除ルールを補正する。multipartの中断や他prefixの掃除は維持し、全体の削除ルールを外す場合も `changes/` と `pending/` の2日回収を補完する。Previewは別bucketを使い、その内部もDB URLのハッシュで分離する。同じDBのHTMLと変更記録をWorker versionで分割しない。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
 

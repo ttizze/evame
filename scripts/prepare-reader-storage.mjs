@@ -1,9 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, extname, join, relative, resolve } from "node:path";
+import { confirmDeployment } from "./cloudflare-build.mjs";
 
 // デプロイ前に参照アセットをR2へ保存し、旧HTMLからも取得できるようにする。
-export async function prepareReaderStorage(configPath, preview) {
+export async function prepareReaderStorage(
+	configPath,
+	preview,
+	deployment = null,
+) {
 	const config = JSON.parse(await readFile(configPath, "utf8"));
 	const bucket = (
 		preview ? config.previews?.r2_buckets : config.r2_buckets
@@ -56,6 +61,7 @@ export async function prepareReaderStorage(configPath, preview) {
 		"/r2/buckets/" +
 		encodeURIComponent(bucket) +
 		"/objects/";
+	if (deployment) await confirmDeployment(deployment);
 	for (let start = 0; start < files.length; start += 8) {
 		const uploaded = await Promise.allSettled(
 			files.slice(start, start + 8).map(async (entry) => {

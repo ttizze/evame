@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 
 const workflows = JSON.parse(
 	execFileSync(
@@ -113,12 +113,45 @@ it("失敗・キャンセル・スキップした検証が一つでもあればC
 	expect(gate.steps[1].if).toContain(
 		"github.event.pull_request.head.repo.full_name == github.repository",
 	);
-	expect(gate.steps[1].with.script).toContain("getCollaboratorPermissionLevel");
 	expect(gate.steps[2]).toMatchObject({
 		name: "Authorize Workers Preview",
 		if: "steps.preview-permission.outputs.allowed == 'true'",
 	});
 });
+
+it.each(["write", "maintain", "admin", "read", "error"])(
+	"PR投稿者の権限照会が%sなら許可対象だけに公開許可を記録する",
+	async (permission) => {
+		const core = { setOutput: vi.fn(), warning: vi.fn() };
+		const getCollaboratorPermissionLevel = vi.fn(async () => {
+			if (permission === "error") throw new Error("lookup failed");
+			return { data: { permission } };
+		});
+		const script = workflows[0].jobs["ci-check"].steps[1].with.script;
+		await new Function(
+			"context",
+			"github",
+			"core",
+			`return (async () => {${script}\n})()`,
+		)(
+			{
+				repo: { owner: "owner", repo: "repo" },
+				payload: { pull_request: { user: { login: "author" } } },
+			},
+			{ rest: { repos: { getCollaboratorPermissionLevel } } },
+			core,
+		);
+		expect(getCollaboratorPermissionLevel).toHaveBeenCalledExactlyOnceWith({
+			owner: "owner",
+			repo: "repo",
+			username: "author",
+		});
+		if (["read", "error"].includes(permission))
+			expect(core.setOutput).not.toHaveBeenCalled();
+		else
+			expect(core.setOutput).toHaveBeenCalledExactlyOnceWith("allowed", "true");
+	},
+);
 
 it("lint・型検査・ビルドと並行し、計測入力の確定だけを待って4分割テストを開始する", () => {
 	const jobs = workflows[0].jobs;

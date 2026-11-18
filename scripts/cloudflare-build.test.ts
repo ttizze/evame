@@ -23,9 +23,18 @@ const base = "2".repeat(40);
 const merge = "3".repeat(40);
 const repository = { full_name: "ttizze/evame" };
 const branch = "t3/faster-ci";
+const signalData = {
+	ciRunId: 11750,
+	ciRunNumber: 350,
+	ciRunAttempt: 2,
+	publishRunId: 11800,
+	publishRunAttempt: 3,
+};
 const run = {
-	id: 11750,
-	path: ".github/workflows/ci.yaml",
+	id: signalData.ciRunId,
+	run_number: signalData.ciRunNumber,
+	run_attempt: signalData.ciRunAttempt,
+	path: ".github/workflows/ci.yaml@refs/pull/1175/merge",
 	head_repository: repository,
 	head_branch: branch,
 	head_sha: head,
@@ -47,7 +56,7 @@ afterEach(() => vi.unstubAllGlobals());
 it("PRの成功したCIが検証したマージコミットを公開対象にする", () => {
 	expect(verifiedPublication(run)).toEqual({
 		sha: merge,
-		pr: { number: 1175, base, runId: 11750 },
+		pr: { number: 1175, base },
 	});
 });
 
@@ -169,7 +178,7 @@ it.each(["success", "skipped"])(
 				}),
 			),
 		);
-		const check = confirmPreviewApproval(run.id);
+		const check = confirmPreviewApproval(run.id, run.run_attempt);
 		if (conclusion === "success") await expect(check).resolves.toBeUndefined();
 		else
 			await expect(check).rejects.toThrow("CI did not authorize publication");
@@ -177,19 +186,19 @@ it.each(["success", "skipped"])(
 );
 
 it("公開専用ブランチと有効な実行IDの組だけを処理する", () => {
-	const message = '{"ciRunId":11750,"publishRunId":11800}';
-	expect(publicationSignal("cf-publish/main", "preview", message)).toBeNull();
-	expect(
+	const message = JSON.stringify(signalData);
+	expect(() =>
+		publicationSignal("cf-publish/main", "preview", message),
+	).toThrow("wrong environment");
+	expect(() =>
 		publicationSignal("cf-publish/pr-1175", "production", message),
-	).toBeNull();
+	).toThrow("wrong environment");
 	expect(publicationSignal("cf-publish/main", "production", message)).toEqual({
-		ciRunId: 11750,
-		publishRunId: 11800,
+		...signalData,
 		pr: null,
 	});
 	expect(publicationSignal("cf-publish/pr-1175", "preview", message)).toEqual({
-		ciRunId: 11750,
-		publishRunId: 11800,
+		...signalData,
 		pr: 1175,
 	});
 	expect(
@@ -204,14 +213,21 @@ it("公開専用ブランチと有効な実行IDの組だけを処理する", ()
 	).toThrow();
 });
 
-it.each(["production", "preview", "failed-migration"] as const)(
+it.each([
+	"production",
+	"preview",
+	"failed-migration",
+	"wrong-attempt",
+	"failed-build",
+	"preview-production-secret",
+] as const)(
 	"Workers Buildsで検証対象をビルドし、%sの公開処理を呼び出す",
 	(mode) => {
 		const path = mkdtempSync(join(tmpdir(), "evame-cloudflare-build-"));
 		const script = fileURLToPath(
 			new URL("./cloudflare-build.mjs", import.meta.url),
 		);
-		const production = mode !== "preview";
+		const production = mode === "production" || mode === "failed-build";
 		const signal = "4".repeat(40);
 		const target = production ? "cf-publish/main" : "cf-publish/pr-1175";
 		try {
@@ -221,7 +237,7 @@ it.each(["production", "preview", "failed-migration"] as const)(
 				`#!/bin/sh
 printf 'git %s\\n' "$*" >> calls
 if [ "$1 $2" = 'rev-parse HEAD' ]; then echo ${signal}; fi
-if [ "$1" = log ]; then echo '{"ciRunId":11750,"publishRunId":11800}'; fi
+if [ "$1" = log ]; then echo '${JSON.stringify(signalData)}'; fi
 if [ "$1" = cat-file ]; then printf 'parent %s\\nparent %s\\n\\nfixture\\n' '${base}' '${head}'; fi
 `,
 				{ mode: 0o755 },
@@ -232,9 +248,10 @@ if [ "$1" = cat-file ]; then printf 'parent %s\\nparent %s\\n\\nfixture\\n' '${b
 printf 'bun %s\\n' "$*" >> calls
 case "$*" in
   'install --frozen-lockfile'|'run build')
-    test -z "$TURSO_AUTH_TOKEN$EVAME_PREVIEW_SECRETS$CLOUDFLARE_API_TOKEN" ;;
+    test -z "$TURSO_AUTH_TOKEN$EVAME_PREVIEW_SECRETS$CLOUDFLARE_API_TOKEN" &&
+    { test "$*" != 'run build' || test '${mode}' != 'failed-build'; } ;;
   'run deploy:workers') test "$CLOUDFLARE_API_TOKEN" = 'fixture-cf' && test -n "$EVAME_WORKERS_PUBLICATION" ;;
-  'run preview:workers deploy') test "$PR_NUMBER" = 1175 && test "$EVAME_PREVIEW_SECRETS" = 'fixture-preview' && test -n "$EVAME_WORKERS_PUBLICATION" ;;
+  'run preview:workers deploy') test "$PR_NUMBER" = 1175 && test "$EVAME_PREVIEW_SECRETS" = 'fixture-preview' && test "$CLOUDFLARE_API_TOKEN" = 'fixture-cf' && test -n "$EVAME_WORKERS_PUBLICATION" && test -z "$TURSO_DATABASE_URL$TURSO_AUTH_TOKEN$SENTRY_AUTH_TOKEN$CLOUDFLARE_API_KEY" ;;
   *) exit 1 ;;
 esac
 `,
@@ -252,12 +269,12 @@ esac
 				join(path, "github.mjs"),
 				`globalThis.fetch = async (url) => {
   const path = new URL(url).pathname;
-  if (path.endsWith('/actions/runs/11750')) return Response.json(${JSON.stringify(successfulRun)});
-  if (path.endsWith('/actions/runs/11800')) return Response.json({ path: '.github/workflows/publish.yaml', head_repository: { full_name: 'ttizze/evame' }, head_branch: 'main', event: 'workflow_run', display_title: 'Publish CI 11750' });
-  if (path.endsWith('/actions/runs/11800/jobs')) return Response.json({ jobs: [{ name: 'migrate', conclusion: '${mode === "failed-migration" ? "failure" : "success"}' }] });
+  if (path.endsWith('/actions/runs/11750/attempts/2')) return Response.json(${JSON.stringify({ ...successfulRun, run_attempt: mode === "wrong-attempt" ? 4 : 2 })});
+  if (path.endsWith('/actions/runs/11800/attempts/3')) return Response.json({ id: 11800, run_attempt: 3, path: '.github/workflows/publish.yaml@main', head_repository: { full_name: 'ttizze/evame' }, head_branch: 'main', event: 'workflow_run', display_title: 'Publish CI 11750' });
+  if (path.endsWith('/actions/runs/11800/attempts/3/jobs')) return Response.json({ jobs: [{ name: '${production ? "revision" : "migrate"}', conclusion: '${mode === "failed-migration" ? "failure" : "success"}' }] });
   if (path.endsWith('/git/ref/heads/main')) return Response.json({ object: { sha: '${head}' } });
   if (path.endsWith('/pulls/1175')) return Response.json(${JSON.stringify(openPull)});
-  if (path.endsWith('/actions/runs/11750/jobs')) return Response.json({ jobs: [{ name: 'ci-check', conclusion: 'success', steps: [{ name: 'Authorize Workers Preview', conclusion: 'success' }] }] });
+  if (path.endsWith('/actions/runs/11750/attempts/2/jobs')) return Response.json({ jobs: [{ name: 'ci-check', conclusion: 'success', steps: [{ name: 'Authorize Workers Preview', conclusion: 'success' }] }] });
   return new Response(null, { status: 404 });
 };`,
 			);
@@ -277,17 +294,41 @@ esac
 							WORKERS_CI: "1",
 							WORKERS_CI_BRANCH: target,
 							WORKERS_CI_COMMIT_SHA: signal,
-							TURSO_AUTH_TOKEN: "fixture-db",
+							TURSO_AUTH_TOKEN:
+								production || mode === "preview-production-secret"
+									? "fixture-db"
+									: "",
+							CLOUDFLARE_API_KEY: "fixture-legacy-cf",
 							CLOUDFLARE_API_TOKEN: "fixture-cf",
 							EVAME_PREVIEW_SECRETS: "fixture-preview",
 						},
 						stdio: "pipe",
 					},
 				);
-			if (mode === "failed-migration") {
-				expect(runBuild).toThrow("no successful DB migration");
+			if (mode === "failed-migration" || mode === "wrong-attempt") {
+				expect(runBuild).toThrow(
+					mode === "failed-migration"
+						? "no successful migrate job"
+						: "does not match verified CI",
+				);
 				expect(readFileSync(join(path, "calls"), "utf8")).not.toMatch(
 					/bun run (?:preview|deploy):workers/,
+				);
+				return;
+			}
+			if (mode === "failed-build") {
+				expect(runBuild).toThrow("bun run build");
+				expect(readFileSync(join(path, "calls"), "utf8")).not.toContain(
+					"bun run deploy:workers",
+				);
+				return;
+			}
+			if (mode === "preview-production-secret") {
+				expect(runBuild).toThrow(
+					"Production credentials are configured for a Preview build",
+				);
+				expect(readFileSync(join(path, "calls"), "utf8")).not.toMatch(
+					/git switch|bun /,
 				);
 				return;
 			}
@@ -316,12 +357,6 @@ esac
 					"bun run build",
 					"bun run preview:workers deploy",
 				]);
-				expect(
-					readFileSync(
-						join(path, "dist/client/evame-preview-commit.txt"),
-						"utf8",
-					).trim(),
-				).toBe(merge);
 			}
 		} finally {
 			rmSync(path, { recursive: true, force: true });

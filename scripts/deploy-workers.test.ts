@@ -99,21 +99,32 @@ it("統合Workerの更新に失敗した場合も成功として返さない", a
 	);
 });
 
-it("R2に保存したあとで新しい公開コミットを検出したら旧Workerを公開しない", async () => {
-	const fetchMock = await readFile(join(directory, "fake-fetch.mjs"), "utf8");
-	await writeFile(
-		join(directory, "fake-fetch.mjs"),
-		`${fetchMock}
+it.each(["before-R2", "during-R2", "migration-fails", "success"])(
+	"本番公開が%sの場合にR2・DB・Workerを必要な段階まで更新する",
+	async (scenario) => {
+		const fetchMock = await readFile(join(directory, "fake-fetch.mjs"), "utf8");
+		await writeFile(
+			join(directory, "fake-fetch.mjs"),
+			`${fetchMock}
 const fetchAsset = globalThis.fetch;
+let checks = 0;
 globalThis.fetch = async (url) => {
  const path = new URL(url).pathname;
  if (!path.includes('/git/ref/heads/')) return fetchAsset(url);
- await appendFile('calls', path.split('/git/ref/heads/')[1] + '\\n');
- return Response.json({ object: { sha: path.endsWith('/cf-publish/main') ? 'new-signal' : 'source' } });
+ const signal = path.endsWith('/cf-publish/main');
+ if (signal) checks++;
+ const newer = ${JSON.stringify(scenario)} === 'before-R2' || (${JSON.stringify(scenario)} === 'during-R2' && checks > 1);
+ await appendFile('calls', (signal ? 'signal' : 'main') + '\\n');
+ return Response.json({ object: { sha: signal ? (newer ? 'new-signal' : 'old-signal') : 'source' } });
 };`,
-	);
-	await expect(
-		promisify(execFile)(
+		);
+		if (scenario === "migration-fails")
+			await writeFile(
+				join(directory, "bin/bun"),
+				'#!/bin/sh\nprintf "%s\\n" "$*" >> calls\nexit 1\n',
+				{ mode: 0o755 },
+			);
+		const deploy = promisify(execFile)(
 			process.execPath,
 			["--import", join(directory, "fake-fetch.mjs"), script],
 			{
@@ -122,6 +133,8 @@ globalThis.fetch = async (url) => {
 					...process.env,
 					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 					CLOUDFLARE_API_TOKEN: "storage-token",
+					TURSO_DATABASE_URL: "libsql://fixture.turso.io",
+					TURSO_AUTH_TOKEN: "fixture-db-token",
 					EVAME_WORKERS_PUBLICATION: JSON.stringify({
 						publication: { sha: "source", pr: null },
 						branch: "main",
@@ -131,13 +144,26 @@ globalThis.fetch = async (url) => {
 					}),
 				},
 			},
-		),
-	).rejects.toThrow("A newer publication signal superseded this build");
-	expect(
-		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
-	).toEqual([
-		"R2 production PUT assets/_astro/app.hash.js",
-		"main",
-		"cf-publish/main",
-	]);
-});
+		);
+		if (scenario === "success") await deploy;
+		else await expect(deploy).rejects.toThrow();
+		const expected = ["main", "signal"];
+		if (scenario !== "before-R2")
+			expected.push(
+				"R2 production PUT assets/_astro/app.hash.js",
+				"main",
+				"signal",
+			);
+		if (["migration-fails", "success"].includes(scenario))
+			expected.push("run db:prod:migrate");
+		if (scenario === "success")
+			expected.push(
+				"main",
+				"signal",
+				"x wrangler deploy --config dist/server/wrangler.json",
+			);
+		expect(
+			(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
+		).toEqual(expected);
+	},
+);

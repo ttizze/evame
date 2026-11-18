@@ -10,6 +10,10 @@ permissions:
   contents: read
   pull-requests: read
 
+concurrency:
+  group: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && (github.event.workflow_run.event == 'pull_request' && 'evame-publish-preview' || 'evame-publish-production') || format('evame-publish-skip-{0}', github.run_id) }}
+  queue: max
+
 jobs:
   revision:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository
@@ -18,6 +22,7 @@ jobs:
       sha: ${{ steps.revision.outputs.sha }}
       url: ${{ steps.revision.outputs.url }}
       pr: ${{ steps.revision.outputs.pr }}
+      attempt: ${{ steps.revision.outputs.attempt }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +42,7 @@ jobs:
             const get = async path => (await github.request(`GET /repos/${repository}/${path}`)).data;
             const username = await confirmPublication(publication, run.head_branch, run.head_sha, get);
             if (publication.pr) {
-              await confirmPreviewApproval(publication.pr.runId, get);
+              await confirmPreviewApproval(run.id, run.run_attempt, get);
               const { data: { permission } } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username });
               if (!["write", "maintain", "admin"].includes(permission)) return;
               const { data: commit } = await github.rest.repos.getCommit({ ...context.repo, ref: publication.sha });
@@ -47,14 +52,17 @@ jobs:
               core.setOutput("url", previewOrigin(publication.pr.number));
             }
             core.setOutput("sha", publication.sha);
+            core.setOutput("attempt", process.env.GITHUB_RUN_ATTEMPT);
 
   migrate:
     needs: revision
-    if: needs.revision.outputs.sha != ''
+    if: needs.revision.outputs.pr != ''
     runs-on: ubuntu-latest
-    concurrency:
-      group: evame-db-${{ needs.revision.outputs.pr != '' && 'preview' || 'production' }}
-      cancel-in-progress: false
+    environment:
+      name: preview
+      url: ${{ needs.revision.outputs.url }}
+    outputs:
+      attempt: ${{ steps.migration.outputs.attempt }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,35 +84,36 @@ jobs:
             const get = async path => (await github.request(`GET /repos/${repository}/${path}`)).data;
             const publication = verifiedPublication(run);
             await confirmPublication(publication, run.head_branch, run.head_sha, get);
-      - name: Migrate production database
-        if: needs.revision.outputs.pr == ''
-        env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
-        run: nix develop --command bun run db:prod:migrate
       - name: Migrate preview database
-        if: needs.revision.outputs.pr != ''
+        id: migration
         env:
           PR_NUMBER: ${{ needs.revision.outputs.pr }}
           EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
-        run: nix develop --command bun run preview:workers migrate
+        run: |
+          nix develop --command bun run preview:workers migrate
+          printf 'attempt=%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
 
   signal:
     needs: [revision, migrate]
+    if: ${{ !cancelled() && needs.revision.result == 'success' && needs.revision.outputs.sha != '' && (needs.revision.outputs.pr == '' || needs.migrate.result == 'success') }}
     runs-on: ubuntu-latest
-    concurrency:
-      group: evame-publish-${{ needs.revision.outputs.pr || 'main' }}
-      cancel-in-progress: false
+    outputs:
+      sha: ${{ steps.signal.outputs.sha }}
     permissions:
       contents: write
     steps:
       - name: Signal Cloudflare Workers Builds
+        id: signal
         uses: actions/github-script@v8
         env:
           PR_NUMBER: ${{ needs.revision.outputs.pr }}
+          PUBLISH_PROOF_ATTEMPT: ${{ needs.revision.outputs.pr != '' && needs.migrate.outputs.attempt || needs.revision.outputs.attempt }}
         with:
           script: |
-            const { id: ciRunId, head_branch: sourceBranch, head_sha: sourceSha } = context.payload.workflow_run;
+            const { id: ciRunId, run_number: ciRunNumber, run_attempt: ciRunAttempt, head_branch: sourceBranch, head_sha: sourceSha } = context.payload.workflow_run;
+            const publishRunAttempt = Number(process.env.PUBLISH_PROOF_ATTEMPT);
+            if (![ciRunId, ciRunNumber, ciRunAttempt, publishRunAttempt].every(value => Number.isSafeInteger(value) && value > 0))
+              throw new Error("Invalid publication run or attempt");
             const pr = process.env.PR_NUMBER;
             if (pr && !/^[1-9]\d*$/.test(pr)) throw new Error("Invalid Preview PR number");
             const ref = `heads/cf-publish/${pr ? `pr-${pr}` : "main"}`;
@@ -115,32 +124,67 @@ jobs:
             } catch (error) {
               if (error.status !== 404) throw error;
             }
+            if (parents.length) {
+              const { data: previous } = await github.rest.git.getCommit({ ...context.repo, commit_sha: parents[0] });
+              const { ciRunNumber: previousRun, ciRunAttempt: previousAttempt } = JSON.parse(previous.message);
+              if (![previousRun, previousAttempt].every(value => Number.isSafeInteger(value) && value > 0))
+                throw new Error("Invalid current publication signal");
+              if (ciRunNumber < previousRun || (ciRunNumber === previousRun && ciRunAttempt < previousAttempt)) {
+                core.notice("A newer CI result has already signaled publication");
+                return;
+              }
+            }
             const { data: tree } = await github.rest.git.createTree({ ...context.repo, tree: [
               { path: "wrangler.jsonc", mode: "100644", type: "blob", content: '{"name":"evame-start"}\n' },
             ] });
-            const message = JSON.stringify({ ciRunId, publishRunId: context.runId });
+            const message = JSON.stringify({ ciRunId, ciRunNumber, ciRunAttempt, publishRunId: context.runId, publishRunAttempt });
             const { data: commit } = await github.rest.git.createCommit({ ...context.repo, message, tree: tree.sha, parents });
             const { data: source } = await github.rest.git.getRef({ ...context.repo, ref: `heads/${sourceBranch}` });
             if (source.object.sha !== sourceSha) throw new Error("Source branch changed before publication");
             if (parents.length) await github.rest.git.updateRef({ ...context.repo, ref, sha: commit.sha, force: false });
             else await github.rest.git.createRef({ ...context.repo, ref: `refs/${ref}`, sha: commit.sha });
+            core.setOutput("sha", commit.sha);
+
+  production:
+    needs: [revision, signal]
+    if: needs.revision.outputs.pr == '' && needs.signal.outputs.sha != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 26
+    permissions:
+      checks: read
+    steps:
+      - name: Wait for Cloudflare production deployment
+        uses: actions/github-script@v8
+        env:
+          SIGNAL_SHA: ${{ needs.signal.outputs.sha }}
+        with:
+          script: |
+            const { setTimeout } = require("node:timers/promises");
+            const deadline = Date.now() + 24 * 60_000;
+            while (Date.now() < deadline) {
+              const { data } = await github.rest.checks.listForRef({ ...context.repo, ref: process.env.SIGNAL_SHA });
+              const check = data.check_runs.find(({ app, name }) => app?.slug === "cloudflare-workers-and-pages" && name === "Workers Builds: evame-start");
+              if (check?.status === "completed") {
+                if (check.conclusion === "success") return;
+                throw new Error(`Cloudflare production deployment ${check.conclusion}: ${check.details_url}`);
+              }
+              await setTimeout(15000);
+            }
+            throw new Error("Cloudflare production deployment was not confirmed");
 
   preview:
     needs: [revision, signal]
-    if: needs.revision.outputs.pr != ''
+    if: needs.revision.outputs.pr != '' && needs.signal.outputs.sha != ''
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment:
       name: preview
       url: ${{ needs.revision.outputs.url }}
-    concurrency:
-      group: evame-preview-connected
-      cancel-in-progress: false
     env:
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
       CONNECTED_PREVIEW_ORIGIN: ${{ needs.revision.outputs.url }}
-      CONNECTED_PREVIEW_SHA: ${{ needs.revision.outputs.sha }}
+      CONNECTED_PREVIEW_SIGNAL: ${{ needs.signal.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -155,18 +199,17 @@ jobs:
         run: |
           nix develop --command node --input-type=module - <<'JS'
           import { setTimeout } from 'node:timers/promises';
-          const { CONNECTED_PREVIEW_ORIGIN: origin, CONNECTED_PREVIEW_SHA: sha } = process.env;
+          import { assertPreviewSignal, previewSignalHeader, readPreviewSignal } from './scripts/preview-deployment.mjs';
+          const { CONNECTED_PREVIEW_ORIGIN: origin, CONNECTED_PREVIEW_SIGNAL: signal } = process.env;
           const deadline = Date.now() + 18 * 60_000;
-          for (;;) {
-            const revision = await fetch(`${origin}/evame-preview-commit.txt?sha=${sha}`, { signal: AbortSignal.timeout(15000) }).catch(() => null);
-            if (revision?.ok && (await revision.text()).trim() === sha) break;
-            if (revision && !revision.bodyUsed) await revision.body?.cancel();
-            if (Date.now() >= deadline) throw new Error(`Cloudflare did not publish verified Preview revision ${sha}`);
+          while (await readPreviewSignal(origin, signal) !== signal) {
+            if (Date.now() >= deadline) throw new Error(`Cloudflare did not publish verified Preview signal ${signal}`);
             await setTimeout(15000);
           }
           for (const path of ['/api/auth/get-session', '/ja']) {
-            const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(15000) });
+            const response = await fetch(`${origin}${path}`, { headers: { [previewSignalHeader]: signal }, signal: AbortSignal.timeout(15000) });
             await response.body?.cancel();
+            assertPreviewSignal(signal, response.headers.get(previewSignalHeader));
             if (response.status !== 200 || (path === '/ja' && response.headers.get('x-evame-html') !== 'astro'))
               throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
           }
@@ -180,7 +223,7 @@ jobs:
             --volume "$PWD:$PWD" --volume /nix/store:/nix/store:ro \
             --workdir "$PWD" --user "$(id -u):$(id -g)" \
             --env PATH --env GSETTINGS_SCHEMA_DIR --env SENTRY_DSN --env VITE_SENTRY_DSN \
-            --env EVAME_PREVIEW_SECRETS --env CONNECTED_PREVIEW_ORIGIN \
+            --env EVAME_PREVIEW_SECRETS --env CONNECTED_PREVIEW_ORIGIN --env CONNECTED_PREVIEW_SIGNAL \
             --env EVAME_CONNECTED_BROWSER \
             mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 \
             node scripts/check-reader-connected.mjs

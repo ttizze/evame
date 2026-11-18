@@ -1,5 +1,4 @@
 import { execFileSync } from "node:child_process";
-import { writeFile } from "node:fs/promises";
 
 const repository = "ttizze/evame";
 const shaPattern = /^[a-f0-9]{40}$/;
@@ -9,7 +8,7 @@ export function verifiedPublication(run) {
 	const head = run.head_sha;
 	const production = branch === "main";
 	if (
-		run.path !== ".github/workflows/ci.yaml" ||
+		run.path?.split("@", 1)[0] !== ".github/workflows/ci.yaml" ||
 		run.head_repository?.full_name !== repository ||
 		!branch ||
 		!shaPattern.test(head) ||
@@ -36,7 +35,7 @@ export function verifiedPublication(run) {
 		pr.head.sha !== head
 	)
 		throw new Error("CI did not verify a single pull request for this branch");
-	return { sha, pr: { number: pr.number, base: pr.base.sha, runId: run.id } };
+	return { sha, pr: { number: pr.number, base: pr.base.sha } };
 }
 
 export function previewOrigin(number) {
@@ -85,10 +84,14 @@ export async function confirmPublication(
 	return pr.user.login;
 }
 
-export async function confirmPreviewApproval(runId, get = github) {
-	if (!Number.isSafeInteger(runId) || runId <= 0)
-		throw new Error("Invalid GitHub CI run ID");
-	const { jobs } = await get(`actions/runs/${runId}/jobs?per_page=100`);
+export async function confirmPreviewApproval(runId, attempt, get = github) {
+	if (
+		![runId, attempt].every((value) => Number.isSafeInteger(value) && value > 0)
+	)
+		throw new Error("Invalid GitHub CI run or attempt");
+	const { jobs } = await get(
+		`actions/runs/${runId}/attempts/${attempt}/jobs?per_page=100`,
+	);
 	const gate = jobs.find((job) => job.name === "ci-check");
 	if (
 		gate?.conclusion !== "success" ||
@@ -116,33 +119,79 @@ export async function confirmDeployment({
 
 export function publicationSignal(branch, mode, message) {
 	const target = /^cf-publish\/(main|pr-([1-9]\d*))$/.exec(branch);
-	if (!target || mode !== (target[2] ? "preview" : "production")) return null;
-	const { ciRunId, publishRunId } = JSON.parse(message);
+	if (!target) return null;
+	if (mode !== (target[2] ? "preview" : "production"))
+		throw new Error(
+			"Cloudflare publication branch is configured for the wrong environment",
+		);
+	const {
+		ciRunId,
+		ciRunNumber,
+		ciRunAttempt,
+		publishRunId,
+		publishRunAttempt,
+	} = JSON.parse(message);
 	if (
-		![ciRunId, publishRunId].every((id) => Number.isSafeInteger(id) && id > 0)
+		![
+			ciRunId,
+			ciRunNumber,
+			ciRunAttempt,
+			publishRunId,
+			publishRunAttempt,
+		].every((id) => Number.isSafeInteger(id) && id > 0)
 	)
 		throw new Error("Invalid publication signal");
-	return { ciRunId, publishRunId, pr: target[2] ? Number(target[2]) : null };
+	return {
+		ciRunId,
+		ciRunNumber,
+		ciRunAttempt,
+		publishRunId,
+		publishRunAttempt,
+		pr: target[2] ? Number(target[2]) : null,
+	};
 }
 
-async function loadPublication({ ciRunId, publishRunId, pr }) {
+async function loadPublication({
+	ciRunId,
+	ciRunNumber,
+	ciRunAttempt,
+	publishRunId,
+	publishRunAttempt,
+	pr,
+}) {
+	const ci = `actions/runs/${ciRunId}/attempts/${ciRunAttempt}`;
+	const publish = `actions/runs/${publishRunId}/attempts/${publishRunAttempt}`;
 	const [run, publisher, { jobs }] = await Promise.all([
-		github(`actions/runs/${ciRunId}`),
-		github(`actions/runs/${publishRunId}`),
-		github(`actions/runs/${publishRunId}/jobs?per_page=100`),
+		github(ci),
+		github(publish),
+		github(`${publish}/jobs?per_page=100`),
 	]);
+	const requiredJob = pr === null ? "revision" : "migrate";
 	if (
-		publisher.path !== ".github/workflows/publish.yaml" ||
+		publisher.path?.split("@", 1)[0] !== ".github/workflows/publish.yaml" ||
+		publisher.id !== publishRunId ||
+		publisher.run_attempt !== publishRunAttempt ||
 		publisher.head_repository?.full_name !== repository ||
 		publisher.head_branch !== "main" ||
 		publisher.event !== "workflow_run" ||
 		publisher.display_title !== `Publish CI ${ciRunId}` ||
-		!jobs.some((job) => job.name === "migrate" && job.conclusion === "success")
+		!jobs.some(
+			(job) => job.name === requiredJob && job.conclusion === "success",
+		)
 	)
-		throw new Error("The publication signal has no successful DB migration");
+		throw new Error(
+			`The publication signal has no successful ${requiredJob} job`,
+		);
 	const publication = verifiedPublication(run);
-	if (!publication || (publication.pr?.number ?? null) !== pr)
+	if (
+		!publication ||
+		run.id !== ciRunId ||
+		run.run_number !== ciRunNumber ||
+		run.run_attempt !== ciRunAttempt ||
+		(publication.pr?.number ?? null) !== pr
+	)
 		throw new Error("The publication signal does not match verified CI");
+	if (pr !== null) await confirmPreviewApproval(ciRunId, ciRunAttempt);
 	return { publication, branch: run.head_branch, head: run.head_sha };
 }
 
@@ -172,9 +221,24 @@ if (import.meta.main) {
 		console.log("No verified publication signal for this branch");
 		process.exit(0);
 	}
+	const {
+		TURSO_DATABASE_URL,
+		TURSO_AUTH_TOKEN,
+		SENTRY_AUTH_TOKEN,
+		EVAME_PREVIEW_SECRETS,
+		CLOUDFLARE_API_TOKEN,
+		CLOUDFLARE_API_KEY: _legacyCloudflareKey,
+		...buildEnvironment
+	} = process.env;
+	if (
+		signal.pr !== null &&
+		(TURSO_DATABASE_URL || TURSO_AUTH_TOKEN || SENTRY_AUTH_TOKEN)
+	)
+		throw new Error(
+			"Production credentials are configured for a Preview build",
+		);
 	const { publication, branch, head } = await loadPublication(signal);
 	const pr = publication.pr?.number;
-	if (pr) await confirmPreviewApproval(publication.pr.runId);
 	await confirmPublication(publication, branch, head);
 	execFileSync(
 		"git",
@@ -206,20 +270,15 @@ if (import.meta.main) {
 		stdio: "inherit",
 	});
 
-	const buildEnv = { ...process.env, TZ: "Asia/Tokyo" };
-	for (const key of [
-		"TURSO_DATABASE_URL",
-		"TURSO_AUTH_TOKEN",
-		"EVAME_PREVIEW_SECRETS",
-		"CLOUDFLARE_API_TOKEN",
-		"CLOUDFLARE_API_KEY",
-	])
-		delete buildEnv[key];
+	const buildEnv = {
+		...buildEnvironment,
+		TZ: "Asia/Tokyo",
+		SENTRY_AUTH_TOKEN: pr ? "" : SENTRY_AUTH_TOKEN,
+	};
 	if (pr)
 		Object.assign(buildEnv, {
 			VITE_PUBLIC_DOMAIN: previewOrigin(pr),
 			VITE_AUTH_GOOGLE_ENABLED: "false",
-			SENTRY_AUTH_TOKEN: "",
 			SENTRY_DSN: "",
 			VITE_SENTRY_DSN: "",
 			GOOGLE_ANALYTICS_ID: "G-0000000000",
@@ -230,7 +289,9 @@ if (import.meta.main) {
 	});
 	execFileSync("bun", ["run", "build"], { stdio: "inherit", env: buildEnv });
 	const deploymentEnv = {
-		...process.env,
+		...(pr
+			? { ...buildEnv, CLOUDFLARE_API_TOKEN, EVAME_PREVIEW_SECRETS }
+			: process.env),
 		EVAME_WORKERS_PUBLICATION: JSON.stringify({
 			publication,
 			branch,
@@ -240,10 +301,6 @@ if (import.meta.main) {
 		}),
 	};
 	if (pr) {
-		await writeFile(
-			"dist/client/evame-preview-commit.txt",
-			`${publication.sha}\n`,
-		);
 		execFileSync("bun", ["run", "preview:workers", "deploy"], {
 			stdio: "inherit",
 			env: { ...deploymentEnv, PR_NUMBER: String(pr) },

@@ -49,7 +49,7 @@ it("CIは外部サービスの秘密値を受け取らず、SQLiteとローカ�
 	);
 });
 
-it("CIの成功後にDBを更新し、公開専用ブランチでCloudflareを起動する", () => {
+it("CI成功後に環境別の順序でDBを更新しCloudflareに公開する", () => {
 	expect(publish.on.workflow_run).toEqual({
 		workflows: ["CI"],
 		types: ["completed"],
@@ -57,7 +57,11 @@ it("CIの成功後にDBを更新し、公開専用ブランチでCloudflareを�
 	expect(ci["run-name"]).toBe("CI ${{ github.sha }}");
 	const source = readFileSync(publishPath, "utf8");
 	expect(source).not.toMatch(/CLOUDFLARE_API_TOKEN|deploy:workers/);
+	expect(publish.concurrency.queue).toBe("max");
 	expect(publish.jobs.migrate.needs).toBe("revision");
+	expect(publish.jobs.migrate.environment.name).toBe("preview");
+	expect(source).not.toContain("db:prod:migrate");
+	expect(publish.jobs.production.needs).toEqual(["revision", "signal"]);
 	expect(publish.jobs.signal.needs).toEqual(["revision", "migrate"]);
 	expect(publish.jobs.signal.permissions).toEqual({ contents: "write" });
 	expect(publish.jobs.signal.steps[0].with.script).toContain(
@@ -65,12 +69,12 @@ it("CIの成功後にDBを更新し、公開専用ブランチでCloudflareを�
 	);
 	expect(publish.jobs.preview.needs).toEqual(["revision", "signal"]);
 	const preview = publish.jobs.preview;
-	expect(preview.env.CONNECTED_PREVIEW_SHA).toBe(
-		"${{ needs.revision.outputs.sha }}",
+	expect(preview.env.CONNECTED_PREVIEW_SIGNAL).toBe(
+		"${{ needs.signal.outputs.sha }}",
 	);
-	expect(preview.steps[0].with.ref).toBe(preview.env.CONNECTED_PREVIEW_SHA);
+	expect(preview.steps[0].with.ref).toBe("${{ needs.revision.outputs.sha }}");
 	const wait = preview.steps.findIndex((step: { run: string }) =>
-		step.run?.includes("evame-preview-commit.txt"),
+		step.run?.includes("readPreviewSignal"),
 	);
 	const connected = preview.steps.findIndex((step: { run: string }) =>
 		step.run?.includes("scripts/check-reader-connected.mjs"),
@@ -81,27 +85,45 @@ it("CIの成功後にDBを更新し、公開専用ブランチでCloudflareを�
 	expect(preview.steps.at(-1).if).toBe("always()");
 });
 
-it.each([null, "previous"])(
-	"公開ブランチの先端が%sの場合にWorker名だけを持つコミットで公開を通知する",
-	async (previous) => {
+it.each([
+	{ previous: null, previousRun: 0, previousAttempt: 0, older: false },
+	{ previous: "previous", previousRun: 348, previousAttempt: 1, older: false },
+	{ previous: "previous", previousRun: 350, previousAttempt: 2, older: false },
+	{ previous: "previous", previousRun: 351, previousAttempt: 1, older: true },
+	{ previous: "previous", previousRun: 350, previousAttempt: 3, older: true },
+])(
+	"先端のCIが$previousRunの試行$previousAttemptなら古いCIだけ通知を見送る",
+	async ({ previous, previousRun, previousAttempt, older }) => {
 		const git = {
 			getRef: vi.fn(async ({ ref }: { ref: string }) => {
 				if (ref === "heads/t3/faster-ci")
 					return { data: { object: { sha: "source" } } };
+				if (ref !== "heads/cf-publish/pr-1175")
+					throw new Error(`Unexpected ref: ${ref}`);
 				if (previous === null)
 					throw Object.assign(new Error("Missing ref"), { status: 404 });
 				return { data: { object: { sha: previous } } };
 			}),
+			getCommit: vi.fn(async () => ({
+				data: {
+					message: JSON.stringify({
+						ciRunNumber: previousRun,
+						ciRunAttempt: previousAttempt,
+					}),
+				},
+			})),
 			createTree: vi.fn(async () => ({ data: { sha: "tree" } })),
 			createCommit: vi.fn(async () => ({ data: { sha: "signal" } })),
 			createRef: vi.fn(),
 			updateRef: vi.fn(),
 		};
 		const step = publish.jobs.signal.steps[0];
+		const core = { notice: vi.fn(), setOutput: vi.fn() };
 		await new Function(
 			"github",
 			"context",
 			"process",
+			"core",
 			`return (async () => {${step.with.script}\n})()`,
 		)(
 			{ rest: { git } },
@@ -110,14 +132,25 @@ it.each([null, "previous"])(
 				payload: {
 					workflow_run: {
 						id: 11750,
+						run_number: 350,
+						run_attempt: 2,
 						head_branch: "t3/faster-ci",
 						head_sha: "source",
 					},
 				},
 				runId: 11800,
 			},
-			{ env: { PR_NUMBER: "1175" } },
+			{ env: { PR_NUMBER: "1175", PUBLISH_PROOF_ATTEMPT: "3" } },
+			core,
 		);
+		if (older) {
+			expect(git.createTree).not.toHaveBeenCalled();
+			expect(git.createRef).not.toHaveBeenCalled();
+			expect(git.updateRef).not.toHaveBeenCalled();
+			expect(core.setOutput).not.toHaveBeenCalled();
+			return;
+		}
+		expect(core.setOutput).toHaveBeenCalledExactlyOnceWith("sha", "signal");
 		expect(git.createTree).toHaveBeenCalledWith({
 			owner: "ttizze",
 			repo: "evame",
@@ -132,7 +165,9 @@ it.each([null, "previous"])(
 		});
 		expect(git.createCommit).toHaveBeenCalledWith(
 			expect.objectContaining({
-				message: '{"ciRunId":11750,"publishRunId":11800}',
+				message:
+					'{"ciRunId":11750,"ciRunNumber":350,"ciRunAttempt":2,"publishRunId":11800,"publishRunAttempt":3}',
+				tree: "tree",
 				parents: previous === null ? [] : [previous],
 			}),
 		);
