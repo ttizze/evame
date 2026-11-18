@@ -1,1 +1,0 @@
-Cloudflare Workers Builds の切り替え後の公開を確認するための一時ファイルです。

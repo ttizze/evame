@@ -33,19 +33,25 @@ ${
 		? `
 const signal = ${JSON.stringify(signal)};
 const signalHeader = ${JSON.stringify(previewSignalHeader)};
+const verificationErrorHeaders = {[signalHeader]: signal, "Cache-Control": "no-store"};
 export default {
  ...worker,
  async fetch(request, env, ctx) {
   if (new URL(request.url).pathname === ${JSON.stringify(previewSignalPath)})
    return new Response(signal + "\\n", { headers: {"Cache-Control": "no-store"} });
   const expected = request.headers.get(signalHeader);
-  if (expected !== null && expected !== signal)
-   return new Response("Preview deployment changed", {status: 409, headers: {[signalHeader]: signal, "Cache-Control": "no-store"}});
-  const response = await worker.fetch(request, env, ctx);
-  if (expected === null) return response;
-  const checked = new Response(response.body, response);
-  checked.headers.set(signalHeader, signal);
-  return checked;
+  if (expected === null) return worker.fetch(request, env, ctx);
+  if (expected !== signal)
+   return new Response("Preview deployment changed", {status: 409, headers: verificationErrorHeaders});
+  try {
+   const response = await worker.fetch(request, env, ctx);
+   const checked = new Response(response.body, response);
+   checked.headers.set(signalHeader, signal);
+   return checked;
+  } catch (error) {
+   console.error(error);
+   return new Response("Internal Server Error", {status: 500, headers: verificationErrorHeaders});
+  }
  }
 };`
 		: "export default worker;"

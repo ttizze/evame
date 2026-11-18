@@ -147,7 +147,7 @@ jobs:
 
   production:
     needs: [revision, signal]
-    if: needs.revision.outputs.pr == '' && needs.signal.outputs.sha != ''
+    if: ${{ !cancelled() && needs.revision.result == 'success' && needs.revision.outputs.pr == '' && needs.signal.result == 'success' && needs.signal.outputs.sha != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 26
     permissions:
@@ -162,12 +162,9 @@ jobs:
             const { setTimeout } = require("node:timers/promises");
             const deadline = Date.now() + 24 * 60_000;
             while (Date.now() < deadline) {
-              const { data } = await github.rest.checks.listForRef({ ...context.repo, ref: process.env.SIGNAL_SHA });
-              const check = data.check_runs.find(({ app, name }) => app?.slug === "cloudflare-workers-and-pages" && name === "Workers Builds: evame-start");
-              if (check?.status === "completed") {
-                if (check.conclusion === "success") return;
-                throw new Error(`Cloudflare production deployment ${check.conclusion}: ${check.details_url}`);
-              }
+              const { data } = await github.rest.checks.listForRef({ ...context.repo, ref: process.env.SIGNAL_SHA, filter: "all" });
+              // Cloudflare can also run the Preview trigger, which rejects this production signal.
+              if (data.check_runs.some(({ app, name, status, conclusion }) => app?.slug === "cloudflare-workers-and-pages" && name === "Workers Builds: evame-start" && status === "completed" && conclusion === "success")) return;
               await setTimeout(15000);
             }
             throw new Error("Cloudflare production deployment was not confirmed");
@@ -177,6 +174,9 @@ jobs:
     if: needs.revision.outputs.pr != '' && needs.signal.outputs.sha != ''
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      actions: read
+      contents: read
     environment:
       name: preview
       url: ${{ needs.revision.outputs.url }}
@@ -190,6 +190,15 @@ jobs:
         with:
           ref: ${{ needs.revision.outputs.sha }}
           persist-credentials: false
+      - name: Download the verified CI build
+        uses: actions/download-artifact@v8
+        with:
+          name: workers
+          path: ${{ runner.temp }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Extract built server functions
+        run: tar -xf "$RUNNER_TEMP/workers.tar" dist/server/assets
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
