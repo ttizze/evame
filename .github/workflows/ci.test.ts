@@ -110,7 +110,14 @@ it("失敗・キャンセル・スキップした検証が一つでもあればC
 			else expect(run).toThrow();
 		}
 	}
-	expect(gate.steps).toHaveLength(1);
+	expect(gate.steps[1].if).toContain(
+		"github.event.pull_request.head.repo.full_name == github.repository",
+	);
+	expect(gate.steps[1].with.script).toContain("getCollaboratorPermissionLevel");
+	expect(gate.steps[2]).toMatchObject({
+		name: "Authorize Workers Preview",
+		if: "steps.preview-permission.outputs.allowed == 'true'",
+	});
 });
 
 it("lint・型検査・ビルドと並行し、計測入力の確定だけを待って4分割テストを開始する", () => {

@@ -1,6 +1,6 @@
 # Cloudflare Workers の運用
 
-全コマンドは `nix develop` 内で実行する。公開表示・TanStack Startの編集・APIの入口は `src/server.ts`。Astroのビルドは `reader/` に置き、`bun run build` がそのサーバーコードとJS/CSSを `dist` へ取り込む。デプロイするWorkerは `evame-start` の1つだけ。CIとローカルでは一度ビルドした成果物を検証し、公開ワークフローでは検証済みSHAから環境別にビルドする。
+ローカルとGitHub Actionsではコマンドを `nix develop` 内で実行する。公開表示・TanStack Startの編集・APIの入口は `src/server.ts`。Astroのビルドは `reader/` に置き、`bun run build` がそのサーバーコードとJS/CSSを `dist` へ取り込む。デプロイするWorkerは `evame-start` の1つだけ。CIでは一度ビルドした成果物を検証し、Cloudflare Workers Buildsが同じSHAから環境別にビルドして配信する。
 
 ## CIのテスト実行
 
@@ -79,15 +79,15 @@ printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIG
 
 ## PRのプレビュー
 
-同じリポジトリ内のPRは、既存のNix CIが成功すると `preview` jobでCloudflare標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。GitHubのdeploymentリンクから開く。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。PR #1140は `https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login`。forkからのPRでは秘密値を渡さず、プレビューをデプロイしない。
+同じリポジトリ内のPRは、Nix CIとPreview DBのマイグレーションが成功するとCloudflare Buildsが標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。公開結果はCloudflare BuildsとGitHubのチェックから確認する。
 
-ログインはメールのリンクを使う。全検証成功後に `Publish` の `preview` jobが検証済みSHAを取得し、`VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定してビルド・公開する。ローカルのブラウザーテストは別originを使うため、そのビルド成果物はPreviewへ転用しない。`BETTER_AUTH_URL` もプレビューと同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
+ログインはメールのリンクを使う。Cloudflare Buildsは `VITE_AUTH_GOOGLE_ENABLED=false` とPreviewの `VITE_PUBLIC_DOMAIN` を指定してビルドする。`BETTER_AUTH_URL` も同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
 
 PRごとに1つの標準Worker Previewを使う。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。初回にシードを投入したDBを再利用し、通常のデプロイでは再投入・初期化しない。シードの更新が必要な場合だけ、専用DBを明示して別途実行する。DBスキーマの互換性がない複数PRの同時検証には使わない。画像は専用R2 `evame-uploads-preview`、公開HTMLは `evame-public-html-preview` に保存し、本番bucketへの読み書きは行わない。読み取り専用maintenanceのKVだけ既存bindingを利用する。
 
 画像bucketは初回だけ `nix develop --command bun x wrangler r2 bucket create evame-uploads-preview` で作成する。公開ドメインは設定せず、Previewの `CF_IMAGE_HOST` を空文字にして同じWorkerの `/api/uploads/` から配信する。既存のPreview secretsに画像ホストが残っていても削除し、Preview設定を優先する。本番は既存の画像ドメインとbucketを維持する。分離前に保存した本番ドメインの画像URLは自動移行しない。CI内のシード済みSQLiteと、このリモートTurso DBは別のものとして扱う。
 
-GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`、専用の `BETTER_AUTH_SECRET` / `ENCRYPTION_KEY`、送信用の `AUTH_RESEND_KEY` をJSONで登録する。翻訳などを試す場合は必要な秘密値も加える。値はソース・ログ・PRへ含めない。
+CloudflareのPreviews Baseのビルドsecret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`、専用の `BETTER_AUTH_SECRET` / `ENCRYPTION_KEY`、送信用の `AUTH_RESEND_KEY` をJSONで設定する。GitHubでは既存の同名secretをPreviewのマイグレーションと実Previewの接続検証に使う。値はソース・ログ・PRへ含めない。
 
 `scripts/preview-workers.mjs` は既存の専用DBへマイグレーションだけを適用した後、`evame-start` 配下の `pr-<PR番号>` をデプロイする。マイグレーションに失敗した場合はデプロイしない。通常Workerは追加しない。生成済み設定を使い、専用の秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。公開表示も編集APIも同じPreview内で動作するため、service bindingが本番を向く制約を受けない。実URLでログイン・編集・再読み込みと公開/非公開・削除・保留タグの回収を検証する。
 
@@ -100,21 +100,31 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 切り替え検証後、旧Vercelプロジェクト `ttizzes-projects/evame` は廃止済み。`evame.tech` のDNSは、CloudflareでプロキシされたAレコードを予約アドレス `192.0.2.0` に向け、切り替え完了後の `evame.tech/*` は `evame-start` に接続する。Vercelをオリジンや切り戻し先として使わない。継続デプロイの環境では Nix と Bun の lockfile を使い、`bun run deploy` を実行する。
 
-## GitHub Actions の継続デプロイ
+## GitHub Actions の検証と Cloudflare Workers Builds の公開
 
 ビルド済みWorkersとシード済みSQLiteは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、ヘッダーと記事も各ブラウザーの独立ジョブにする。ReaderはChromiumで独立して検証する。各ジョブはSQLiteの独立コピーを使い、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全13群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=header`のように指定する。
 
-`.github/workflows/ci.yaml` はBiome・typecheck・ビルド・単体テスト・ブラウザーテストと、SQLite・ローカルR2を使う保存／公開HTMLの接続検証だけを行う。mainとPRの両方でSentry送信・アップロードを無効化し、Cloudflare・Tursoなどのサービス認証を渡さない。CIの成果物と一緒に実際に検証したコミットSHAを `verified-source` へ記録する。
+`.github/workflows/ci.yaml` はBiome・typecheck・ビルド・単体テスト・ブラウザーテストと、SQLite・ローカルR2を使う保存／公開HTMLの接続検証を行う。mainとPRの両方でSentry送信・アップロードを無効化し、Cloudflare・Tursoなどのサービス認証を渡さない。CIの実行名 `CI <SHA>` に検証するコミットを記録し、ビルドしたソースの実SHAと一致することを確認する。
 
-`.github/workflows/publish.yaml` はCIの成功完了から起動する。同じCI runの `verified-source` を読み、mainではrunのhead SHA、PRでは元のbase・headを親に持つ検証済みマージコミットであることをGitHub APIで確認する。同じリポジトリの開いたPRのうち、投稿者が人間のアカウントで、現在のリポジトリ権限がwrite・maintain・adminのものだけを自動Preview公開する。権限はGitHub APIで照会し、照会失敗時は公開を止める。Bot・権限のない投稿者・fork・更新済みPR・古いmainの結果は公開しない。checkoutは確認したSHAへ固定する。検証用ビルドは全ブラウザー群で共有し、公開側はSentry・Analytics・Preview URLなど各環境の設定を使って同じソースをビルドする。外部接続と認証はこの公開ワークフローだけで扱う。
+`.github/workflows/publish.yaml` は成功したCIから起動し、同じSHAのDBマイグレーションを直列実行する。同じリポジトリの開いたPRでCIが投稿者のwrite・maintain・admin権限を確認した場合にPreviewを公開する。DB更新の成功後、GitHub Actionsの標準トークンで本番は `cf-publish/main`、Previewは `cf-publish/pr-<PR番号>` に公開用コミットを作る。コミットにはWranglerのWorker名とCI・Publishの実行IDだけを記録する。CIを再実行して成功すると、同じソースSHAで新しい公開用コミットを作る。
 
-本番はSentryアップロード付きビルド、mainが更新されていないことの再確認、DBマイグレーション、R2アセット保存、Workerデプロイの順に実行する。PRは専用DB・認証秘密値で標準Previewを公開し、実URLの認証・Astro表示・保存・非公開化・削除・並行更新・R2失敗後の回復検証を維持する。本番同士・Preview同士の公開はそれぞれ直列化し、DB更新・R2保存に失敗した場合はWorkerをデプロイしない。公開の失敗はPublishの結果として報告し、CIの合否には混ぜない。新しい `workflow_run` ワークフローはmainへ入ってから有効になる。
+Cloudflareの `evame-start` → Settings → Builds では既存の `ttizze/evame` Git連携を使う。Productionの対象は `cf-publish/main`。ProductionとPreviews BaseのBuild commandを空にし、両方のビルド変数に `SKIP_DEPENDENCY_INSTALL=true`、`BUN_VERSION=1.3.13`、`NODE_VERSION=24.19.0` を設定する。BunとNodeの版は `nix develop` の実行結果と揃える。Deploy commandとPreview commandはどちらも `main` から公開判定を読み込む。Preview commandでは最後の引数を `preview` にする。公開コマンドと公開専用ブランチの種別が一致した場合に公開する。
+
+```sh
+git fetch --no-tags --depth=1 https://github.com/ttizze/evame.git main && git show FETCH_HEAD:scripts/cloudflare-build.mjs > /tmp/evame-cloudflare-build.mjs && node /tmp/evame-cloudflare-build.mjs production
+```
+
+Workers Buildsは公開用コミットのブランチと実行IDを照合する。GitHub上のCIとDB更新の成功を確認し、本番は `main` の検証済み先端SHA、PreviewはCIが使ったマージSHAを取得してビルドする。PRのhead SHAが同じ場合、CI終了後に `main` が進んでも、そのCIが検証したマージSHAを使用できる。R2アセット保存後に現行SHAと公開用コミットを再確認し、Wranglerから公開する。公開専用以外のブランチでは公開処理を終了する。
+
+`Publish` のPreview検証ジョブは、実Previewが同じマージSHAを配信するまで待つ。認証・Astro表示・保存・非公開化・削除・並行更新・R2障害からの回復を検証し、成果物をGitHubへ記録する。
+
+切り替え時は旧本番ビルドを停止してから `main` に変更を取り込む。`Publish` が `cf-publish/main` を初回作成した後にCloudflareの本番対象を切り替え、ビルドを再開する。Previewでは専用DBへの接続・画像保存と配信コミットの一致を確認する。切り替え後の再試行には `Publish` の再実行か、同じ公開用コミットのCloudflare Buildsからの再試行を使う。
 
 Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は公開アセットをR2へ保存してから `dist/server/wrangler.json` を1回デプロイする。HTMLのR2キーは `html/<DB URL hash>/<URL hash>` とし、同じDBの全Worker版でHTML・更新記録・依存索引を共有する。デプロイ後も保存HTMLを維持し、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 
 `scripts/prepare-reader-storage.mjs` は本番と標準Previewで共用し、`dist/client/_astro` のアセットを `assets/_astro/` へCloudflare公式R2 REST APIでMIMEとimmutable Cache-Control付きで保存する。`CLOUDFLARE_API_TOKEN` を使い、未指定の場合は `bun x wrangler auth token --json` で既存のCLI認証を取得する。開発用のremote sessionや新規ログインは使用しない。本番とPreviewの専用バケットを維持し、通常デプロイではバケットの保持設定を変更しない。アップロード失敗時はデプロイしない。旧JS/CSSは削除期限を設けず、現行Static Assetsが404のとき同じWorkerのR2 bindingから配信する。CIのアセット履歴cacheは不要。ビルド自体ではネットワーク取得しない。
 
-Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンには既存の `evame-start` へのIndividual Workers Editor権限と、対象bucketのR2読み書き権限が必要。lifecycleの管理権限は初期設定にだけ使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
+本番の `TURSO_DATABASE_URL` と `TURSO_AUTH_TOKEN` は既存のGitHub Actions secretからマイグレーションに渡す。Cloudflare Productionのビルド変数には `SENTRY_AUTH_TOKEN` と `GOOGLE_ANALYTICS_ID` を設定する。Workers BuildsのトークンにはWorker編集とR2書き込みの権限が必要。Cloudflareの標準生成トークンには両方が含まれる。GitHub ActionsはCloudflareのデプロイ用トークンを使わない。
 
 本番切り替え前に `PUBLIC_HTML` のbucketを用意する。`changes/`と`pending/`だけを2日で回収し、`html/`・`dependencies/`・`assets/`に削除期限を設けない。バケット作成後に `scripts/configure-reader-storage.mjs` をR2管理権限で一度実行し、既存の削除ルールを補正する。multipartの中断や他prefixの掃除は維持し、全体の削除ルールを外す場合も `changes/` と `pending/` の2日回収を補完する。Previewは別bucketを使い、その内部もDB URLのハッシュで分離する。同じDBのHTMLと変更記録をWorker versionで分割しない。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
 

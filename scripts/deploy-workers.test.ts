@@ -98,3 +98,46 @@ it("統合Workerの更新に失敗した場合も成功として返さない", a
 		"wrangler deploy",
 	);
 });
+
+it("R2に保存したあとで新しい公開コミットを検出したら旧Workerを公開しない", async () => {
+	const fetchMock = await readFile(join(directory, "fake-fetch.mjs"), "utf8");
+	await writeFile(
+		join(directory, "fake-fetch.mjs"),
+		`${fetchMock}
+const fetchAsset = globalThis.fetch;
+globalThis.fetch = async (url) => {
+ const path = new URL(url).pathname;
+ if (!path.includes('/git/ref/heads/')) return fetchAsset(url);
+ await appendFile('calls', path.split('/git/ref/heads/')[1] + '\\n');
+ return Response.json({ object: { sha: path.endsWith('/cf-publish/main') ? 'new-signal' : 'source' } });
+};`,
+	);
+	await expect(
+		promisify(execFile)(
+			process.execPath,
+			["--import", join(directory, "fake-fetch.mjs"), script],
+			{
+				cwd: directory,
+				env: {
+					...process.env,
+					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+					CLOUDFLARE_API_TOKEN: "storage-token",
+					EVAME_WORKERS_PUBLICATION: JSON.stringify({
+						publication: { sha: "source", pr: null },
+						branch: "main",
+						head: "source",
+						signalBranch: "cf-publish/main",
+						signalSha: "old-signal",
+					}),
+				},
+			},
+		),
+	).rejects.toThrow("A newer publication signal superseded this build");
+	expect(
+		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
+	).toEqual([
+		"R2 production PUT assets/_astro/app.hash.js",
+		"main",
+		"cf-publish/main",
+	]);
+});

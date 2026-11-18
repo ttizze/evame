@@ -107,7 +107,6 @@ it.each(["", "../main", "0"])(
 );
 
 it("シード済みの専用DBを再利用し、マイグレーション後に標準PRプレビューを公開する", async () => {
-	const output = join(directory, "output");
 	const result = await promisify(execFile)(
 		process.execPath,
 		["--import", join(directory, "fake-fetch.mjs"), script],
@@ -117,7 +116,6 @@ it("シード済みの専用DBを再利用し、マイグレーション後に�
 				...process.env,
 				CLOUDFLARE_API_TOKEN: "storage-token",
 				PR_NUMBER: "1140",
-				GITHUB_OUTPUT: output,
 				EVAME_PREVIEW_SECRETS: JSON.stringify({
 					...secrets,
 					BETTER_AUTH_URL: "https://old.example",
@@ -141,8 +139,8 @@ it("シード済みの専用DBを再利用し、マイグレーション後に�
 		),
 	);
 	expect(saved).toEqual(secrets);
-	expect(await readFile(output, "utf8")).toBe(
-		"url=https://pr-1140-evame-start.reimei.workers.dev\n",
+	expect(result.stdout).toContain(
+		"https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login",
 	);
 	expect(result.stdout).not.toContain("test-database-token");
 });
@@ -162,7 +160,6 @@ it("標準Previewの画像と公開HTMLを本番とは別のR2へ保存する", 
 
 it("統合Workerのプレビュー失敗を成功として返さない", async () => {
 	await writeFile(join(directory, "fail-worker"), "");
-	const output = join(directory, "output");
 	await expect(
 		promisify(execFile)(
 			process.execPath,
@@ -173,12 +170,10 @@ it("統合Workerのプレビュー失敗を成功として返さない", async (
 					...process.env,
 					CLOUDFLARE_API_TOKEN: "storage-token",
 					PR_NUMBER: "1140",
-					GITHUB_OUTPUT: output,
 					EVAME_PREVIEW_SECRETS: JSON.stringify(secrets),
 					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 				},
 			},
 		),
 	).rejects.toThrow();
-	await expect(readFile(output)).rejects.toThrow();
 });

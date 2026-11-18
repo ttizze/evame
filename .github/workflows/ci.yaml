@@ -1,4 +1,5 @@
 name: CI
+run-name: CI ${{ github.sha }}
 
 on:
   pull_request:
@@ -219,15 +220,8 @@ jobs:
           overwrite: true
           retention-days: 7
 
-      - name: Record verified source revision
-        run: git rev-parse HEAD > "$RUNNER_TEMP/source.sha"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: verified-source
-          path: ${{ runner.temp }}/source.sha
-          if-no-files-found: error
-          overwrite: true
-          retention-days: 7
+      - name: Confirm the build used the revision in the CI run name
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
   browser:
     needs: build
@@ -306,3 +300,19 @@ jobs:
           BUILD_RESULT: ${{ needs.build.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
         run: test "$LINT_RESULT" = success && test "$TYPECHECK_RESULT" = success && test "$TEST_RESULT" = success && test "$BUILD_RESULT" = success && test "$BROWSER_RESULT" = success
+      - name: Check PR author permission for Preview
+        id: preview-permission
+        if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.type == 'User'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { user } = context.payload.pull_request;
+            try {
+              const { data: { permission } } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username: user.login });
+              if (["write", "maintain", "admin"].includes(permission)) core.setOutput("allowed", "true");
+            } catch {
+              core.warning("Could not confirm permission to publish Preview");
+            }
+      - name: Authorize Workers Preview
+        if: steps.preview-permission.outputs.allowed == 'true'
+        run: ':'

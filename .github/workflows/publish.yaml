@@ -1,4 +1,5 @@
 name: Publish
+run-name: Publish CI ${{ github.event.workflow_run.id }}
 
 on:
   workflow_run:
@@ -7,70 +8,53 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  pull-requests: read
 
 jobs:
   revision:
-    permissions:
-      contents: read
-      actions: read
-      pull-requests: read
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     outputs:
-      target: ${{ steps.revision.outputs.target }}
       sha: ${{ steps.revision.outputs.sha }}
+      url: ${{ steps.revision.outputs.url }}
       pr: ${{ steps.revision.outputs.pr }}
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/checkout@v4
         with:
-          name: verified-source
-          path: ${{ runner.temp }}/verified-source
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-      - name: Resolve verified publication revision
+          persist-credentials: false
+      - name: Resolve verified Preview revision
         id: revision
         uses: actions/github-script@v8
         with:
           script: |
+            const { pathToFileURL } = require("node:url");
+            const { verifiedPublication, confirmPublication, confirmPreviewApproval, previewOrigin } =
+              await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/cloudflare-build.mjs`).href);
             const run = context.payload.workflow_run;
+            const publication = verifiedPublication(run);
+            if (!publication) return;
             const repository = `${context.repo.owner}/${context.repo.repo}`;
-            if (run.conclusion !== "success" || run.head_repository.full_name !== repository) return;
-            const sha = require("node:fs").readFileSync(`${process.env.RUNNER_TEMP}/verified-source/source.sha`, "utf8").trim();
-            if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Invalid verified source revision");
-            if (run.event === "pull_request") {
-              if (run.pull_requests.length !== 1) return;
-              const original = run.pull_requests[0];
-              const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: original.number });
-              if (pr.state !== "open" || pr.base.ref !== "main" || pr.head.repo.full_name !== repository || pr.head.sha !== run.head_sha) return;
-              if (original.head.sha !== run.head_sha) throw new Error("CI head does not match PR revision");
-              if (pr.user.type !== "User") return;
-              const { data: author } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username: pr.user.login });
-              if (!["write", "maintain", "admin"].includes(author.permission)) return;
-              const { data: commit } = await github.rest.repos.getCommit({ ...context.repo, ref: sha });
-              if (commit.parents.length !== 2 || commit.parents[0].sha !== original.base.sha || commit.parents[1].sha !== run.head_sha)
-                throw new Error("Verified source is not the CI merge revision");
-              core.setOutput("target", "preview");
-              core.setOutput("sha", sha);
-              core.setOutput("pr", String(original.number));
-            } else if (["push", "workflow_dispatch"].includes(run.event) && run.head_branch === "main") {
-              if (sha !== run.head_sha) throw new Error("Verified source does not match CI revision");
-              const { data: branch } = await github.rest.repos.getBranch({ ...context.repo, branch: "main" });
-              if (branch.commit.sha !== sha) return;
-              core.setOutput("target", "production");
-              core.setOutput("sha", sha);
+            const get = async path => (await github.request(`GET /repos/${repository}/${path}`)).data;
+            const username = await confirmPublication(publication, run.head_branch, run.head_sha, get);
+            if (publication.pr) {
+              await confirmPreviewApproval(publication.pr.runId, get);
+              const { data: { permission } } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username });
+              if (!["write", "maintain", "admin"].includes(permission)) return;
+              const { data: commit } = await github.rest.repos.getCommit({ ...context.repo, ref: publication.sha });
+              if (commit.parents.map(parent => parent.sha).join(" ") !== `${publication.pr.base} ${run.head_sha}`)
+                throw new Error("CI did not verify the PR merge revision");
+              core.setOutput("pr", String(publication.pr.number));
+              core.setOutput("url", previewOrigin(publication.pr.number));
             }
+            core.setOutput("sha", publication.sha);
 
-  production:
+  migrate:
     needs: revision
-    if: needs.revision.outputs.target == 'production'
+    if: needs.revision.outputs.sha != ''
     runs-on: ubuntu-latest
     concurrency:
-      group: evame-production
+      group: evame-db-${{ needs.revision.outputs.pr != '' && 'preview' || 'production' }}
       cancel-in-progress: false
-    env:
-      TZ: Asia/Tokyo
-      GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,52 +63,84 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install dependencies
-        run: nix develop --command bun install --frozen-lockfile
-      - name: Build production Workers
-        env:
-          TURSO_DATABASE_URL: ""
-          TURSO_AUTH_TOKEN: ""
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: nix develop --command bun run build
-      - name: Confirm production revision is current
+      - run: nix develop --command bun install --frozen-lockfile
+      - name: Confirm the verified revision is still current
         uses: actions/github-script@v8
         with:
           script: |
-            const { data: branch } = await github.rest.repos.getBranch({ ...context.repo, branch: "main" });
-            if (branch.commit.sha !== context.payload.workflow_run.head_sha)
-              throw new Error("main changed after verification; publish the new CI result instead");
+            const { pathToFileURL } = require("node:url");
+            const { verifiedPublication, confirmPublication } =
+              await import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/scripts/cloudflare-build.mjs`).href);
+            const run = context.payload.workflow_run;
+            const repository = `${context.repo.owner}/${context.repo.repo}`;
+            const get = async path => (await github.request(`GET /repos/${repository}/${path}`)).data;
+            const publication = verifiedPublication(run);
+            await confirmPublication(publication, run.head_branch, run.head_sha, get);
       - name: Migrate production database
+        if: needs.revision.outputs.pr == ''
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
         run: nix develop --command bun run db:prod:migrate
-      - name: Deploy Cloudflare Workers
+      - name: Migrate preview database
+        if: needs.revision.outputs.pr != ''
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: nix develop --command bun run deploy:workers
+          PR_NUMBER: ${{ needs.revision.outputs.pr }}
+          EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
+        run: nix develop --command bun run preview:workers migrate
 
-  preview:
-    needs: revision
-    if: needs.revision.outputs.target == 'preview'
+  signal:
+    needs: [revision, migrate]
     runs-on: ubuntu-latest
     concurrency:
-      group: evame-preview
+      group: evame-publish-${{ needs.revision.outputs.pr || 'main' }}
       cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - name: Signal Cloudflare Workers Builds
+        uses: actions/github-script@v8
+        env:
+          PR_NUMBER: ${{ needs.revision.outputs.pr }}
+        with:
+          script: |
+            const { id: ciRunId, head_branch: sourceBranch, head_sha: sourceSha } = context.payload.workflow_run;
+            const pr = process.env.PR_NUMBER;
+            if (pr && !/^[1-9]\d*$/.test(pr)) throw new Error("Invalid Preview PR number");
+            const ref = `heads/cf-publish/${pr ? `pr-${pr}` : "main"}`;
+            let parents = [];
+            try {
+              const { data: previous } = await github.rest.git.getRef({ ...context.repo, ref });
+              parents = [previous.object.sha];
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            const { data: tree } = await github.rest.git.createTree({ ...context.repo, tree: [
+              { path: "wrangler.jsonc", mode: "100644", type: "blob", content: '{"name":"evame-start"}\n' },
+            ] });
+            const message = JSON.stringify({ ciRunId, publishRunId: context.runId });
+            const { data: commit } = await github.rest.git.createCommit({ ...context.repo, message, tree: tree.sha, parents });
+            const { data: source } = await github.rest.git.getRef({ ...context.repo, ref: `heads/${sourceBranch}` });
+            if (source.object.sha !== sourceSha) throw new Error("Source branch changed before publication");
+            if (parents.length) await github.rest.git.updateRef({ ...context.repo, ref, sha: commit.sha, force: false });
+            else await github.rest.git.createRef({ ...context.repo, ref: `refs/${ref}`, sha: commit.sha });
+
+  preview:
+    needs: [revision, signal]
+    if: needs.revision.outputs.pr != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     environment:
       name: preview
-      url: ${{ steps.deploy.outputs.url }}
-    permissions:
-      contents: read
-      deployments: write
-      pull-requests: read
+      url: ${{ needs.revision.outputs.url }}
+    concurrency:
+      group: evame-preview-connected
+      cancel-in-progress: false
     env:
-      PR_NUMBER: ${{ needs.revision.outputs.pr }}
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
-      GOOGLE_ANALYTICS_ID: G-0000000000
-      VITE_AUTH_GOOGLE_ENABLED: "false"
-      VITE_PUBLIC_DOMAIN: https://pr-${{ needs.revision.outputs.pr }}-evame-start.reimei.workers.dev
+      CONNECTED_PREVIEW_ORIGIN: ${{ needs.revision.outputs.url }}
+      CONNECTED_PREVIEW_SHA: ${{ needs.revision.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -135,40 +151,29 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install dependencies
         run: nix develop --command bun install --frozen-lockfile
-      - name: Build PR preview
-        run: nix develop --command bun run build
-      - name: Confirm PR revision is current
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: Number(process.env.PR_NUMBER) });
-            if (pr.state !== "open" || pr.head.sha !== context.payload.workflow_run.head_sha)
-              throw new Error("PR changed after verification; publish the new CI result instead");
-      - name: Deploy native Cloudflare Previews
-        id: deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
-        run: nix develop --command bun run preview:workers
-      - name: Verify preview auth and Astro
+      - name: Wait for Cloudflare to publish the verified revision
         run: |
-          # shellcheck disable=SC2016 # テンプレート展開はBunが行う。
-          nix develop --command bun -e '
-            for (const path of ["/api/auth/get-session", "/ja"]) {
-              const started = Date.now();
-              for (;;) {
-                const response = await fetch(process.env.VITE_PUBLIC_DOMAIN + path, { signal: AbortSignal.timeout(30000) });
-                await response.body?.cancel();
-                if (response.status === 200 && (path !== "/ja" || response.headers.get("x-evame-html") === "astro")) break;
-                if (Date.now() - started > 30000) throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
-                await new Promise(resolve => setTimeout(resolve, 250));
-              }
-            }
-          '
+          nix develop --command node --input-type=module - <<'JS'
+          import { setTimeout } from 'node:timers/promises';
+          const { CONNECTED_PREVIEW_ORIGIN: origin, CONNECTED_PREVIEW_SHA: sha } = process.env;
+          const deadline = Date.now() + 18 * 60_000;
+          for (;;) {
+            const revision = await fetch(`${origin}/evame-preview-commit.txt?sha=${sha}`, { signal: AbortSignal.timeout(15000) }).catch(() => null);
+            if (revision?.ok && (await revision.text()).trim() === sha) break;
+            if (revision && !revision.bodyUsed) await revision.body?.cancel();
+            if (Date.now() >= deadline) throw new Error(`Cloudflare did not publish verified Preview revision ${sha}`);
+            await setTimeout(15000);
+          }
+          for (const path of ['/api/auth/get-session', '/ja']) {
+            const response = await fetch(`${origin}${path}`, { signal: AbortSignal.timeout(15000) });
+            await response.body?.cancel();
+            if (response.status !== 200 || (path === '/ja' && response.headers.get('x-evame-html') !== 'astro'))
+              throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
+          }
+          JS
       - name: Verify connected publication on Cloudflare Preview
         env:
           EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
-          CONNECTED_PREVIEW_ORIGIN: ${{ steps.deploy.outputs.url }}
           EVAME_CONNECTED_BROWSER: "true"
         run: |
           nix develop --command docker run --rm --init --ipc=host \
